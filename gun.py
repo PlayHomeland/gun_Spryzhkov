@@ -114,7 +114,7 @@ class Gun:
     def targetting(self, event):
         """Прицеливание. Зависит от положения мыши."""
         if event:
-            self.an = math.atan((event.pos[1]-450) / (event.pos[0]-20))
+            self.an = math.atan2((event.pos[1]-450), (event.pos[0]-20))
         if self.f2_on:
             self.color = RED
         else:
@@ -149,16 +149,28 @@ class Target:
         """
         """
         self.screen = screen
-        self.x = randint(600, 780)
-        self.y = randint(300, 550)
         self.r = randint(20, 50)
+        self.x = randint(600, 780)
+        self.y = randint(300, 540-self.r)
         self.color = RED
         self.live = 1
         self.points = 0
+        self.vy = randint(0,10)
 
     def hit(self, points=1):
         """Попадание шарика в цель."""
         self.points += points
+
+    def move(self):
+        """Переместить мяч по прошествии единицы времени.
+
+        Метод описывает перемещение мяча за один кадр перерисовки. То есть, обновляет значения
+        self.x и self.y с учетом скоростей self.vx и self.vy, силы гравитации, действующей на мяч,
+        и стен по краям окна (размер окна 800х600).
+        """
+        self.y -= self.vy
+        if self.y >=500 or self.y<= 20:
+            self.vy = -self.vy
 
     def draw(self):
         pygame.draw.circle(
@@ -173,16 +185,19 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 bullet = 0
 balls = []
+targets = []
 
 clock = pygame.time.Clock()
 gun = Gun(screen)
-target = Target(screen)
+for i in range(2):
+    targets.append(Target(screen))
 finished = False
 
 while not finished:
     screen.fill(WHITE)
     gun.draw()
-    target.draw()
+    for target in targets:
+        target.draw()
     for b in balls:
         b.draw()
     pygame.display.update()
@@ -198,15 +213,16 @@ while not finished:
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
 
-
-    for b in balls:
-        b.move()
-        if b.hittest(target) and target.live:
-            target.live = 0
-            target.hit()
-            target.__init__(screen)
-        if b.live<=0:
-            balls.remove(b)
-    gun.power_up()
+    for target in targets:
+        target.move()
+        for b in balls:
+            b.move()
+            if b.hittest(target) and target.live:
+                target.live = 0
+                target.hit()
+                target.__init__(screen)
+            if b.live<=0:
+                balls.remove(b)
+        gun.power_up()
 
 pygame.quit()
