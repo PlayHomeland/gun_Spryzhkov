@@ -51,8 +51,7 @@ class Ball:
         self.y -= self.vy
         self.live -=1
         if self.x >=780 or self.x <=20:
-            self.vx = -0.75*self.vx
-            self.vy = 0.75*self.vy
+            self.vx = -self.vx
         if self.y >=550 or self.y<= 20:
             self.vy = -0.75*self.vy+1
             self.vx = 0.75*self.vx
@@ -74,6 +73,7 @@ class Ball:
             Возвращает True в случае столкновения мяча и цели. В противном случае возвращает False.
         """
         if (self.x-obj.x)**2 + (self.y-obj.y)**2<=(self.r+obj.r)**2:
+            self.live = 0
             return True
         else:
             return False
@@ -87,6 +87,9 @@ class Gun:
         self.f2_on = 0
         self.an = 1
         self.color = GREY
+        self.rect = 0
+        self.x = 0
+        self.y = 450
 
     def fire2_start(self, event):
         self.f2_on = 1
@@ -118,8 +121,14 @@ class Gun:
             self.color = GREY
 
     def draw(self):
-        # FIXIT don't know how to do it
-        pass
+        pygame.draw.line(
+            self.screen,
+            self.color,
+            (self.x, self.y),
+            (self.x + (self.f2_power + 10) * math.cos(self.an),
+             self.y + (self.f2_power + 10) * math.sin(self.an)),
+            6
+        )
 
     def power_up(self):
         if self.f2_on:
@@ -143,7 +152,7 @@ class Target:
         self.x = randint(600, 780)
         self.y = randint(300, 550)
         self.r = randint(20, 50)
-        self.color = GAME_COLORS[0]
+        self.color = RED
         self.live = 1
         self.points = 0
 
@@ -188,6 +197,7 @@ while not finished:
             gun.fire2_end(event)
         elif event.type == pygame.MOUSEMOTION:
             gun.targetting(event)
+
 
     for b in balls:
         b.move()
